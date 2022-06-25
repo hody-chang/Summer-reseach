@@ -31,7 +31,7 @@
     clear all;
     
     % How long do we run the simulation?
-    n_iter = 100;
+    n_iter = 2000;
     
     % For plotting purpose, we will aslo display the current simulation
     % time
@@ -42,8 +42,8 @@
     ylabel('meter');
 
     % Parameters
-    row = 20;
-    col = 20;
+    row = 10;
+    col = 10;
     stiffness = 10;    % N/m
     damping =  1;      % Ns/m
     mass = 0.01;        % Kg
@@ -72,13 +72,13 @@ function nodes = buildNodes(row, col)
     
     for c = 1: col
         for r = 1 : row
-            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100 ]; % 1 cm step
+            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100]; % 1 cm step
             node(r,c).pos = node(r,c).initalPos;
             node(r,c).acc = [0 0];
             node(r,c).vel = [0 0];
 
             % The last row is fixed
-            if (r == 1) %&& ((c == 1) || (c == row))
+            if (r == 1) && ((c == 1) || (c == row))
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -190,10 +190,10 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
     % Position, velocity, and acceelleration update
     for r = 1 : row        
         for c = 1: col
-            if  node(r,c).isFixed ~= 1            
+            if  node(r,c).isFixed ~= 1              
                 node(r,c).acc = node(r,c).force ./ mass;
                 node(r,c).vel = node(r,c).vel + node(r,c).acc .* ts;
-                node(r,c).pos = node(r,c).pos + node(r,c).vel .* ts;           
+                node(r,c).pos = node(r,c).pos + node(r,c).vel .* ts;    
             end               
         end
     end
