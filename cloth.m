@@ -1,99 +1,252 @@
-%% declare
-clear all;
+%% Deformable object with interconnected mass-spring-damper
+%
+%  Author : Auralius Manurung (manurung.auralius@gmail.com)
+%  Note   : Collapsing under gravity.
+% 
 
-m = 1;
-g = [0;-9.81];
-C = 0.03;
-dt = 0.01;
-k = 100;
-nstep = 500;
-n = 5;
-%% memory
-x = zeros(2,n*n);
-v = zeros(2,n*n);
+%% Data structures for the nodes
+%  nodes.r
+%  nodes.c
+%  nodes.node.intialPos
+%  nodes.node.pos
+%  nodes.node.force
+%  nodes.node.vel
+%  nodes.node.acc
+%
+% 8 interconnections:
+%  O   O   O
+%    \ | /
+%  O---O---O
+%    / | \
+%  O   O   O
 
-L_0 = 1;
-L_d = sqrt(2*L_0^2);
 
-
-F_in = zeros(2,n*n);
-F_total = zeros(2,n*n);
-%% gind setting
-botton_left = [1;50];
-
-for i= 1:n
-    for j = 1:n
-        x(:,(i-1)*n+j)= botton_left + [(j-1)*1;i*1];
-    end
-end
 %%
-for i=1:nstep
 
+% This is the main function
+
+    % Warning! This clears everything!
+    clf;
+    clc;
+    clear all;
     
-    v = v + dt/2*F_total/m;
-    x = x + dt*v;
+    % How long do we run the simulation?
+    n_iter = 100;
     
-    F_total = zeros(2,n*n);
-    F_in = zeros(2,n*n);
+    % For plotting purpose, we will aslo display the current simulation
+    % time
+    S.h = plot(0, 0);
+    S.mText = uicontrol('style','text');
     
-    for j=1:n*n
-        if x(2,j) <= 0
-            v(2,j) =  v(2,j)*(-1);
-            x(2,j) =  x(2,j)*(-1);
-        end 
-    end
-      
-    for j=1:n %o-o
-        for k=1:n-1
-            F_in(:,(j-1)*n+k) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-1)*n+k),x(:,(j-1)*n+k+1),L_0,k);
-            F_in(:,(j-1)*n+k+1) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-1)*n+k+1),x(:,(j-1)*n+k),L_0,k);
+    xlabel('meter');
+    ylabel('meter');
+
+    % Parameters
+    row = 20;
+    col = 20;
+    stiffness = 10;    % N/m
+    damping =  1;      % Ns/m
+    mass = 0.01;        % Kg
+    ts = 0.005;         % Seconds
+    
+    % Build the nodes and the canvas
+    nodes = buildNodes(row, col);
+    canvas = createCanvas(nodes);
+    canvas = drawNodes(S, canvas, nodes, 0);
+    
+    % This is the main iterations
+    for i = 0 : n_iter
+        nodes = updateNode(nodes, mass, stiffness, damping, ts);
+        if mod(i, 10) == 0
+            canvas = drawNodes(S, canvas, nodes, ts*i);
         end
     end
-    
-    for j=1:n-1 %o|o
-        for k=1:n
-            F_in(:,(j-1)*n+k) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-1)*n+k),x(:,(j)*n+k),L_0,k);
-            F_in(:,(j)*n+k) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j)*n+k),x(:,(j-1)*n+k),L_0,k);
-        end
-    end
-    
-    for j=1:n-1 %o/o
-        for k=1:n-1
-            F_in(:,(j-1)*n+k) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-1)*n+k),x(:,(j)*n+k+1),L_d,k);
-            F_in(:,(j)*n+k+1) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j)*n+k+1),x(:,(j-1)*n+k),L_d,k);
-        end
-    end
-    
-    for j=2:n %o\o
-        for k=1:n-1
-            F_in(:,(j-1)*n+k) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-1)*n+k),x(:,(j-2)*n+k+1),L_d,k);
-            F_in(:,(j-2)*n+k+1) = F_in(:,(j-1)*n+k)+F_inter(x(:,(j-2)*n+k+1),x(:,(j-1)*n+k),L_d,k);
-        end
-    end
-    
-    for j= 1:n*n
-            F_total(:,j) = m .* g -C.*v(:,j)+F_in(:,j);
-    end
-    
-    F_total(:,21) = [0;0];
-    F_total(:,25) = [0;0];
-    
-    
-    v = v+ dt/2*F_total/m;
-    
-    scatter(x(1,1:5),x(2,1:5),'.r');
-    hold on
-    scatter(x(1,6:25),x(2,6:25),'.b');
-    hold off
-    
-    xlim([0 5]);
-    ylim([0 100]);
-    movieVector(i) = getframe;
-end
+        
+
+
 %%
-myWriter = VideoWriter('moven');
-myWriter.FrameRate = 10;
+function nodes = buildNodes(row, col)
+% Build the nodes 
+    nodes.row = row;
+    nodes.col = col;
+    
+    for c = 1: col
+        for r = 1 : row
+            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100 ]; % 1 cm step
+            node(r,c).pos = node(r,c).initalPos;
+            node(r,c).acc = [0 0];
+            node(r,c).vel = [0 0];
 
-open(myWriter);
-writeVideo(myWriter, movieVector);
-close(myWriter);
+            % The last row is fixed
+            if (r == 1) %&& ((c == 1) || (c == row))
+                node(r,c).isFixed = 1;
+            else
+                node(r,c).isFixed = 0;
+            end
+        end
+    end
+    
+    nodes.node = node;
+end
+
+%% 
+function nodes = updateNode(nodes, mass, stiffness, damping, ts)
+% Update all nodes per time sampling
+    row = nodes.row;
+    col = nodes.col;
+    node = nodes.node;
+    
+    % Force update
+    % Calculate force on each node
+    for r = 1 : row
+        nextRow = r + 1;
+        prevRow = r - 1;
+        
+        for c = 1 : col
+            nextCol = c + 1;
+            prevCol = c - 1;
+            
+            f1 = [0 0];
+            f2 = [0 0];
+            f3 = [0 0];
+            f4 = [0 0];
+            f5 = [0 0];
+            f6 = [0 0];
+            f7 = [0 0];
+            f8 = [0 0];
+
+            % Link 1
+            if (r < row && c > 1)
+                l0 = node(r, c).initalPos - node(nextRow, prevCol).initalPos;
+                lt = node(r, c).pos - node(nextRow, prevCol).pos;
+                n = norm(lt, 2);                
+                f1 = stiffness * (n - norm(l0, 2)) * lt / n;
+            end
+
+            % Link 2
+            if (r < row)
+                l0 = node(r, c).initalPos - node(nextRow, c).initalPos;
+                lt = node(r, c).pos - node(nextRow, c).pos;
+                n = norm(lt, 2);
+                f2 = stiffness * (n - norm(l0, 2)) * lt / n;
+            end
+
+            % Link 3
+            if (c < col)
+                l0 = node(r, c).initalPos - node(r, nextCol).initalPos;
+                lt = node(r, c).pos - node(r, nextCol).pos;
+                n = norm(lt, 2);
+                f3 = stiffness * (n - norm(l0, 2)) * lt / n;
+            end
+
+            % Link 4
+            if (r > 1 && c < col)
+                l0 = node(r, c).initalPos - node(prevRow, nextCol).initalPos;
+                lt = node(r, c).pos - node(prevRow, nextCol).pos;
+                n = norm(lt, 2);
+                f4 = stiffness * (n - norm(l0, 2)) * lt / n;
+            end
+
+            % Link 5
+            if (r > 1)
+                l0 = node(r, c).initalPos - node(prevRow, c).initalPos;
+                lt = node(r, c).pos - node(prevRow, c).pos;
+                n = norm(lt, 2);
+                f5 = stiffness * (n - norm(l0, 2)) * lt / n;    
+            end
+
+            % Link 6
+            if (c > 1)
+                l0 = node(r, c).initalPos - node(r, prevCol).initalPos;                        
+                lt = node(r, c).pos - node(r, prevCol).pos; 
+                n = norm(lt, 2);
+                f6 = stiffness * (n - norm(l0, 2)) * lt / n;                     
+            end
+            
+            % Link 7
+            if (r < row && c < col)
+                l0 = node(r, c).initalPos - node(nextRow, nextCol).initalPos;                        
+                lt = node(r, c).pos - node(nextRow, nextCol).pos; 
+                n = norm(lt, 2);
+                f7 = stiffness * (n - norm(l0, 2)) * lt / n;                     
+            end
+            
+            % Link 8
+            if (r > 1 && c > 1)
+                l0 = node(r, c).initalPos - node(prevRow, prevCol).initalPos;                        
+                lt = node(r, c).pos - node(prevRow, prevCol).pos; 
+                n = norm(lt, 2);
+                f8 = stiffness * (n - norm(l0, 2)) * lt / n;                     
+            end
+            
+            % M XDDOT + B XDOT  + KX = Fext
+            % XDDOT = -KX - B XDOT + Fext
+            node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
+                               damping * node(r,c).vel + mass * [0 -9.81];
+
+        end
+    end
+
+    % Position, velocity, and acceelleration update
+    for r = 1 : row        
+        for c = 1: col
+            if  node(r,c).isFixed ~= 1            
+                node(r,c).acc = node(r,c).force ./ mass;
+                node(r,c).vel = node(r,c).vel + node(r,c).acc .* ts;
+                node(r,c).pos = node(r,c).pos + node(r,c).vel .* ts;           
+            end               
+        end
+    end
+    
+    nodes.node = node;
+end
+
+%%
+function canvas = createCanvas(nodes)
+    % Graphic thingy     
+    index = 1;
+    for c = 1 : nodes.col
+        for r = 1 : nodes.row
+            canvas(index,:) = nodes.node(r, c).pos;
+            index = index + 1;
+        end
+    end
+
+    canvas_min = min(canvas);
+    canvas_max = max(canvas);
+    range = canvas_max - canvas_min;
+
+    xlim([canvas_min(1)-range(1) canvas_max(1)+range(1)])
+    ylim([canvas_min(2)-range(2)*10 canvas_max(2)+range(2)])
+end
+
+%% 
+function canvas = drawNodes(S, canvas, nodes, timestamp)    
+% Draw the nodes
+    index = 1;    
+    for c = 1 : nodes.col
+        % Vertical line, going down
+        for r = nodes.row : -1 : 1
+            canvas(index, :) = nodes.node(r, c).pos;
+            index = index + 1;
+        end
+
+        % Zig-zag line, going up
+        for r = 1 : nodes.row
+            canvas(index,:) = nodes.node(r,c).pos;
+            index = index + 1;
+            if (c < nodes.col)
+                canvas(index ,:) = nodes.node(r, c + 1).pos;
+                index = index + 1;
+            end                          
+        end
+
+    end
+
+    set(S.h, 'XData', canvas(:,1));
+    set(S.h, 'YData', canvas(:,2));    
+    set(S.mText,'String', timestamp);
+
+    drawnow;
+end
+
