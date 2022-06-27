@@ -1,66 +1,36 @@
-%% Deformable object with interconnected mass-spring-damper
-%
-%  Author : Auralius Manurung (manurung.auralius@gmail.com)
-%  Note   : Collapsing under gravity.
-% 
-
-%% Data structures for the nodes
-%  nodes.r
-%  nodes.c
-%  nodes.node.intialPos
-%  nodes.node.pos
-%  nodes.node.force
-%  nodes.node.vel
-%  nodes.node.acc
-%
-% 8 interconnections:
-%  O   O   O
-%    \ | /
-%  O---O---O
-%    / | \
-%  O   O   O
-
-
-%%
-
-% This is the main function
-
-    % Warning! This clears everything!
-    clf;
-    clc;
-    clear all;
+clf;
+clc;
+clear all;
     
-    % How long do we run the simulation?
-    n_iter = 2000;
-    
-    % For plotting purpose, we will aslo display the current simulation
-    % time
-    S.h = plot(0, 0);
-    S.mText = uicontrol('style','text');
-    
-    xlabel('meter');
-    ylabel('meter');
 
-    % Parameters
-    row = 10;
-    col = 10;
-    stiffness = 10;    % N/m
-    damping =  1;      % Ns/m
-    mass = 0.01;        % Kg
-    ts = 0.005;         % Seconds
+n_iter = 2000;
     
-    % Build the nodes and the canvas
-    nodes = buildNodes(row, col);
-    canvas = createCanvas(nodes);
-    canvas = drawNodes(S, canvas, nodes, 0);
+S.h = plot(0, 0);
+S.mText = uicontrol('style','text');
+
+xlabel('meter');
+ylabel('meter');
+
+
+row = 10;
+col = 10;
+stiffness = 10;    % N/m
+damping =  1;      % Ns/m
+mass = 0.01;        % Kg
+ts = 0.005;         % Seconds
     
-    % This is the main iterations
-    for i = 0 : n_iter
-        nodes = updateNode(nodes, mass, stiffness, damping, ts);
-        if mod(i, 10) == 0
-            canvas = drawNodes(S, canvas, nodes, ts*i);
-        end
+% Build the nodes
+nodes = buildNodes(row, col);
+canvas = createCanvas(nodes);
+canvas = drawNodes(S, canvas, nodes, 0);
+    
+
+for i = 0 : n_iter
+    nodes = updateNode(nodes, mass, stiffness, damping, ts);
+    if mod(i, 10) == 0
+        canvas = drawNodes(S, canvas, nodes, ts*i);
     end
+end
         
 
 
