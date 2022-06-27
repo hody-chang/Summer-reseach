@@ -149,8 +149,6 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
                 f8 = stiffness * (n - norm(l0, 2)) * lt / n;                     
             end
             
-            % M XDDOT + B XDOT  + KX = Fext
-            % XDDOT = -KX - B XDOT + Fext
             node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
                                damping * node(r,c).vel + mass * [0 -9.81];
 
@@ -195,13 +193,13 @@ function canvas = drawNodes(S, canvas, nodes, timestamp)
 % Draw the nodes
     index = 1;    
     for c = 1 : nodes.col
-        % Vertical line, going down
+        % Vertical line
         for r = nodes.row : -1 : 1
             canvas(index, :) = nodes.node(r, c).pos;
             index = index + 1;
         end
 
-        % Zig-zag line, going up
+        % Zig-zag line
         for r = 1 : nodes.row
             canvas(index,:) = nodes.node(r,c).pos;
             index = index + 1;
