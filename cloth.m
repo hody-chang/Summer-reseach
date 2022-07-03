@@ -27,8 +27,13 @@ canvas = drawNodes(S, canvas, nodes, 0);
 
 for i = 0 : n_iter
     nodes = updateNode(nodes, mass, stiffness, damping, ts);
+    for c = 1: col
+        for r = 1 : row
+            
+        end
+    end
     if mod(i, 10) == 0
-        canvas = drawNodes(S, canvas, nodes, ts*i);
+        %canvas = drawNodes(S, canvas, nodes, ts*i);
     end
 end
         
@@ -42,13 +47,13 @@ function nodes = buildNodes(row, col)
     
     for c = 1: col
         for r = 1 : row
-            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100]; % 1 cm step
+            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100 0]; % 1 cm step
             node(r,c).pos = node(r,c).initalPos;
-            node(r,c).acc = [0 0];
-            node(r,c).vel = [0 0];
+            node(r,c).acc = [0 0 0];
+            node(r,c).vel = [0 0 0];
 
             % The last row is fixed
-            if (r == 1) && ((c == 1) || (c == row))
+            if (c == 1) 
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -76,14 +81,14 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
             nextCol = c + 1;
             prevCol = c - 1;
             
-            f1 = [0 0];
-            f2 = [0 0];
-            f3 = [0 0];
-            f4 = [0 0];
-            f5 = [0 0];
-            f6 = [0 0];
-            f7 = [0 0];
-            f8 = [0 0];
+            f1 = [0 0 0];
+            f2 = [0 0 0];
+            f3 = [0 0 0];
+            f4 = [0 0 0];
+            f5 = [0 0 0];
+            f6 = [0 0 0];
+            f7 = [0 0 0];
+            f8 = [0 0 0];
 
             % Link 1
             if (r < row && c > 1)
@@ -150,7 +155,7 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
             end
             
             node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
-                               damping * node(r,c).vel + mass * [0 -9.81];
+                               damping * node(r,c).vel + mass * [0 -9.81 0];
 
         end
     end
@@ -212,7 +217,7 @@ function canvas = drawNodes(S, canvas, nodes, timestamp)
     end
 
     set(S.h, 'XData', canvas(:,1));
-    set(S.h, 'YData', canvas(:,2));    
+    set(S.h, 'YData', canvas(:,2));
     set(S.mText,'String', timestamp);
 
     drawnow;
