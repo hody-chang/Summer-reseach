@@ -10,11 +10,11 @@ S.mText = uicontrol('style','text');
 
 xlabel('xmeter');
 ylabel('ymeter');
-
+zlabel('zmeter');
 
 row = 10;
 col = 10;
-stiffness = 10;    % N/m
+stiffness = 1;    % N/m
 damping =  1;      % Ns/m
 mass = 0.01;        % Kg
 ts = 0.005;         % Seconds
@@ -51,7 +51,7 @@ function nodes = buildNodes(row, col)
             node(r,c).vel = [0 0 0];
 
             % The last row is fixed
-            if (c == 1) 
+            if (r == 1) && ((c == 1) || (c == col))
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -155,7 +155,7 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
             end
             
             node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
-                               damping * node(r,c).vel + mass * [0 -9.81 0] ...
+                               damping * node(r,c).vel + mass * [0 0 -9.81]; ...
                                %%+ wind_vc.*(node(r,c).vel-1).*[-0.1 0 0] ;
 
         end
@@ -190,9 +190,9 @@ function canvas = createCanvas(nodes)
     canvas_max = max(canvas);
     range = canvas_max - canvas_min;
 
-    xlim([canvas_min(1)-range(1)*0.5 canvas_max(1)+range(1)*0.5])
-    ylim([canvas_min(1)-range(1)*0.5 canvas_max(1)+range(1)*0.5])
-    zlim([canvas_min(2)-range(2)*10 canvas_max(2)+range(2)])
+    xlim([0 0.15])
+    ylim([0 0.15])
+    zlim([-1 0])
 end
 
 %% 
@@ -219,8 +219,8 @@ function canvas = drawNodes(S, canvas, nodes, timestamp)
     end
 
     set(S.h, 'XData', canvas(:,1));
-    set(S.h, 'YData', canvas(:,3));
-    set(S.h, 'ZData', canvas(:,2));
+    set(S.h, 'YData', canvas(:,2));
+    set(S.h, 'ZData', canvas(:,3));
     set(S.mText,'String', timestamp);
 
     drawnow;
