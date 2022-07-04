@@ -5,11 +5,11 @@ clear all;
 
 n_iter = 2000;
     
-S.h = plot(0, 0);
+S.h = plot3(0, 0,0);
 S.mText = uicontrol('style','text');
 
-xlabel('meter');
-ylabel('meter');
+xlabel('xmeter');
+ylabel('ymeter');
 
 
 row = 10;
@@ -48,7 +48,7 @@ function nodes = buildNodes(row, col)
             node(r,c).vel = [0 0 0];
 
             % The last row is fixed
-            if (c == 1) 
+            if (r == 1) && ((c == 1) || (c == col))
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -184,8 +184,9 @@ function canvas = createCanvas(nodes)
     canvas_max = max(canvas);
     range = canvas_max - canvas_min;
 
-    xlim([canvas_min(1)-range(1) canvas_max(1)+range(1)])
-    ylim([canvas_min(2)-range(2)*10 canvas_max(2)+range(2)])
+    xlim([canvas_min(1)-range(1)*0.5 canvas_max(1)+range(1)*0.5])
+    ylim([canvas_min(1)-range(1)*0.5 canvas_max(1)+range(1)*0.5])
+    zlim([canvas_min(2)-range(2)*10 canvas_max(2)+range(2)])
 end
 
 %% 
@@ -212,7 +213,8 @@ function canvas = drawNodes(S, canvas, nodes, timestamp)
     end
 
     set(S.h, 'XData', canvas(:,1));
-    set(S.h, 'YData', canvas(:,2));
+    set(S.h, 'YData', canvas(:,3));
+    set(S.h, 'ZData', canvas(:,2));
     set(S.mText,'String', timestamp);
 
     drawnow;
