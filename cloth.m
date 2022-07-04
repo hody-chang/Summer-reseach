@@ -3,7 +3,7 @@ clc;
 clear all;
     
 
-n_iter = 2000;
+n_iter = 5000;
     
 S.h = plot3(0, 0,0);
 S.mText = uicontrol('style','text');
@@ -27,9 +27,9 @@ canvas = drawNodes(S, canvas, nodes, 0);
 
 for i = 0 : n_iter
     nodes = updateNode(nodes, mass, stiffness, damping, ts);
-    if mod(i, 10) == 0
+    %if mod(i, 10) == 0
         canvas = drawNodes(S, canvas, nodes, ts*i);
-    end
+    %end
 end
         
 
@@ -45,7 +45,7 @@ function nodes = buildNodes(row, col)
     
     for c = 1: col
         for r = 1 : row
-            node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100 0]; % 1 cm step
+            node(r,c).initalPos = [(c - 1) / 10 (r - 1) / 10+1 0]; % 1 cm step
             node(r,c).pos = node(r,c).initalPos;
             node(r,c).acc = [0 0 0];
             node(r,c).vel = [0 0 0];
@@ -190,9 +190,9 @@ function canvas = createCanvas(nodes)
     canvas_max = max(canvas);
     range = canvas_max - canvas_min;
 
-    xlim([0 0.15])
-    ylim([0 0.15])
-    zlim([-1 0])
+    xlim([0 2])
+    ylim([0 2])
+    zlim([-2 0])
 end
 
 %% 
