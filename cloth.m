@@ -40,6 +40,9 @@ function nodes = buildNodes(row, col)
     nodes.row = row;
     nodes.col = col;
     
+    
+    
+    
     for c = 1: col
         for r = 1 : row
             node(r,c).initalPos = [(c - 1) / 100 (r - 1) / 100 0]; % 1 cm step
@@ -48,7 +51,7 @@ function nodes = buildNodes(row, col)
             node(r,c).vel = [0 0 0];
 
             % The last row is fixed
-            if (r == 1) && ((c == 1) || (c == col))
+            if (c == 1) 
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -65,6 +68,8 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
     row = nodes.row;
     col = nodes.col;
     node = nodes.node;
+    wind_vc = 0.1;
+    wind_speed = [-1 0 0];
     
     % Force update
     % Calculate force on each node
@@ -150,7 +155,8 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
             end
             
             node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
-                               damping * node(r,c).vel + mass * [0 -9.81 0];
+                               damping * node(r,c).vel + mass * [0 -9.81 0] ...
+                               %%+ wind_vc.*(node(r,c).vel-1).*[-0.1 0 0] ;
 
         end
     end
