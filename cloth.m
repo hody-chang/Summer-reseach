@@ -27,13 +27,8 @@ canvas = drawNodes(S, canvas, nodes, 0);
 
 for i = 0 : n_iter
     nodes = updateNode(nodes, mass, stiffness, damping, ts);
-    for c = 1: col
-        for r = 1 : row
-            
-        end
-    end
     if mod(i, 10) == 0
-        %canvas = drawNodes(S, canvas, nodes, ts*i);
+        canvas = drawNodes(S, canvas, nodes, ts*i);
     end
 end
         
