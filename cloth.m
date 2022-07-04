@@ -14,7 +14,7 @@ zlabel('zmeter');
 
 row = 10;
 col = 10;
-stiffness = 1;    % N/m
+stiffness = 10;    % N/m
 damping =  1;      % Ns/m
 mass = 0.01;        % Kg
 ts = 0.005;         % Seconds
