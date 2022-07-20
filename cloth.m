@@ -3,7 +3,7 @@ clc;
 clear all;
     
 
-n_iter = 5000;
+n_iter = 4000;
     
 S.h = plot3(0, 0,0);
 S.mText = uicontrol('style','text');
@@ -66,8 +66,8 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
     col = nodes.col;
     node = nodes.node;
     wind_vc = 1;
-    p = pi*ts/360;
-    wind_speed = [1000 0 0];
+    p = pi*ts;
+    wind_speed = [200 200 0];
     
     % Force update
     % Calculate force on each node
@@ -152,7 +152,7 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
                 f8 = stiffness * (n - norm(l0, 2)) * lt / n;                     
             end
             
-
+            %normal of point
            
             if (r ~= 1 && r ~= row)
                 if (c == 1)
