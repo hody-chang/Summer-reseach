@@ -40,18 +40,15 @@ function nodes = buildNodes(row, col)
     nodes.row = row;
     nodes.col = col;
     
-    
-    
-    
     for c = 1: col
         for r = 1 : row
-            node(r,c).initalPos = [(c - 1) / 10 (r - 1) / 10+1 0]; % 1 cm step
+            node(r,c).initalPos = [(c - 1) / 10 0 (r - 1) / 10]; % 1 cm step
             node(r,c).pos = node(r,c).initalPos;
             node(r,c).acc = [0 0 0];
-            node(r,c).vel = [0 0 0];
-
+            node(r,c).vel = [rand rand rand];
+            node(r,c).norm = [0 0 0];
             % The last row is fixed
-            if (r == 1) && ((c == 1) || (c == col))
+            if (c == 1) 
                 node(r,c).isFixed = 1;
             else
                 node(r,c).isFixed = 0;
@@ -68,9 +65,9 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
     row = nodes.row;
     col = nodes.col;
     node = nodes.node;
-    wind_vc = 0.1;
+    wind_vc = 1;
     p = pi*ts/360;
-    wind_speed = [0 sin(p) 0];
+    wind_speed = [1000 0 0];
     
     % Force update
     % Calculate force on each node
@@ -155,9 +152,43 @@ function nodes = updateNode(nodes, mass, stiffness, damping, ts)
                 f8 = stiffness * (n - norm(l0, 2)) * lt / n;                     
             end
             
+
+           
+            if (r ~= 1 && r ~= row)
+                if (c == 1)
+                    node(r,c).norm = cross((node(r, c+1).pos-node(r, c).pos),(node(r+1, c).pos-node(r-1, c).pos));
+                elseif (c == row)
+                    node(r,c).norm = cross((node(r, c).pos-node(r, c-1).pos),(node(r+1, c).pos-node(r-1, c).pos)); 
+                else
+                    node(r,c).norm = cross((node(r, c+1).pos-node(r, c-1).pos),(node(r+1, c).pos-node(r-1, c).pos));
+                end
+            end
+            
+            if (c ~= 1 && c ~= col)
+                if (r == 1)
+                    node(r,c).norm = cross((node(r, c+1).pos-node(r, c-1).pos),(node(r+1, c).pos-node(r, c).pos));
+                elseif (r == row)
+                    node(r,c).norm = cross((node(r, c+1).pos-node(r, c-1).pos),(node(r, c).pos-node(r-1, c).pos)); 
+                end
+            end
+            
+            if (c == 1 && r == 1)
+                node(r,c).norm = cross((node(r, c+1).pos-node(r, c).pos),(node(r+1, c).pos-node(r, c).pos));
+            end
+            if (c == 1 && r == row)
+                node(r,c).norm = cross((node(r, c+1).pos-node(r, c).pos),(node(r, c).pos-node(r-1, c).pos));
+            end
+            if (c == col && r == row)
+                node(r,c).norm = cross((node(r, c).pos-node(r, c-1).pos),(node(r, c).pos-node(r-1, c).pos));
+            end
+            if (c == col && r == 1)
+                node(r,c).norm = cross((node(r, c).pos-node(r, c-1).pos),(node(r+1, c).pos-node(r, c).pos));
+            end
+            
+            
             node(r,c).force =  -f1 - f2 - f3 - f4 - f5 - f6 - f7 - f8 - ... 
-                               damping * node(r,c).vel + mass * [0 0 -9.81]; ...
-                               + wind_vc.*(dot(wind_speed,node(r,c).vel)).*[0 1 0] ;
+                               damping * node(r,c).vel + mass * [0 0 -9.81] ...
+                               + wind_vc*(dot(node(r,c).norm,(wind_speed-node(r,c).vel)))*node(r,c).norm;
 
         end
     end
@@ -191,9 +222,9 @@ function canvas = createCanvas(nodes)
     canvas_max = max(canvas);
     range = canvas_max - canvas_min;
 
-    xlim([0 2])
-    ylim([0 2])
-    zlim([-2 0])
+    xlim([-1 1.5])
+    ylim([-1 1])
+    zlim([-1 2])
 end
 
 %% 
